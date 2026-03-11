@@ -171,12 +171,6 @@ const Login = () => {
       triggerToast("Firebase OTP is not configured. Update frontend .env values.", "error");
       return;
     }
-    const host = window.location.hostname;
-    if (!["localhost", "127.0.0.1"].includes(host)) {
-      triggerToast("Open app from localhost/127.0.0.1 for Firebase OTP.", "error");
-      return;
-    }
-
     if (!phone || phone.length < 10) return triggerToast("Please enter a valid phone number", "error");
 
     setLoading(true);
@@ -228,7 +222,7 @@ const Login = () => {
       } else if (error.code === 'auth/argument-error') {
         triggerToast("Firebase configuration error. Check .env Firebase keys.", "error");
       } else if (error.code === "auth/invalid-app-credential") {
-        triggerToast("Invalid app credential: complete CAPTCHA, use localhost, disable ad-block/shields, and retry.", "error");
+        triggerToast("Invalid app credential: complete CAPTCHA, add this domain in Firebase Authorized Domains, disable ad-block/shields, and retry.", "error");
       } else if (error.code === 'auth/too-many-requests' || error.code === 'auth/quota-exceeded') {
         triggerToast("Too many attempts. For development, use Firebase test phone numbers (no real SMS is sent).", "error");
       } else {
