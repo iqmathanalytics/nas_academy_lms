@@ -32,15 +32,6 @@ const FIREBASE_CONFIGURED = Boolean(
   !String(firebaseConfig.apiKey).includes("replace_me")
 );
 
-const TEST_OTP_NUMBERS = (import.meta.env.VITE_TEST_OTP_NUMBERS || "")
-  .split(",")
-  .map((x: string) => x.trim())
-  .filter(Boolean)
-  .map((entry: string) => {
-    const [num, code] = entry.split(":");
-    return { num: (num || "").replace(/\D/g, ""), code: (code || "").trim() };
-  });
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 auth.useDeviceLanguage();
@@ -79,7 +70,6 @@ const Login = () => {
   const [showSignupOtpInput, setShowSignupOtpInput] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [isCaptchaSolved, setIsCaptchaSolved] = useState(false);
-  const [localTestOtp, setLocalTestOtp] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({ email: "", password: "", name: "" });
 
@@ -155,18 +145,6 @@ const Login = () => {
 
   // Signup OTP
   const sendSignupOtp = async () => {
-    const normalizedPhone = phone.replace(/\D/g, "");
-    const matchedTest = TEST_OTP_NUMBERS.find(
-      (x: { num: string; code: string }) =>
-        x.num === normalizedPhone || x.num === `91${normalizedPhone}`
-    );
-    if (import.meta.env.DEV && matchedTest?.code) {
-      setLocalTestOtp(matchedTest.code);
-      setShowSignupOtpInput(true);
-      triggerToast("Test OTP mode: enter the configured test OTP.", "success");
-      return;
-    }
-
     if (!FIREBASE_CONFIGURED) {
       triggerToast("Firebase OTP is not configured. Update frontend .env values.", "error");
       return;
@@ -202,7 +180,7 @@ const Login = () => {
 
       setLoading(false);
       setShowSignupOtpInput(true);
-      triggerToast("OTP sent. If this is a Firebase test number, enter the preset test OTP from console.", "success");
+      triggerToast("OTP sent successfully.", "success");
 
     } catch (error: any) {
       console.error("SMS Error:", error);
@@ -233,16 +211,6 @@ const Login = () => {
 
   const verifySignupOtp = async () => {
     if (!otp) return;
-
-    if (localTestOtp) {
-      if (otp === localTestOtp) {
-        triggerToast("Phone verified (test mode)!", "success");
-        await finalizeSignup();
-      } else {
-        triggerToast("Invalid test OTP.", "error");
-      }
-      return;
-    }
 
     setLoading(true);
 
@@ -281,7 +249,6 @@ const Login = () => {
       setOtp("");
       setPhone("");
       setConfirmationResult(null);
-      setLocalTestOtp(null);
     } catch (err: any) {
       triggerToast(err.response?.data?.detail || "Registration Failed. Email may exist.", "error");
     }
