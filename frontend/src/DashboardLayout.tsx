@@ -5,6 +5,7 @@ import {
   ChevronRight, Code, Menu, Settings, Users, FolderOpen, MessageSquare // ✅ Added FolderOpen Icon
 } from "lucide-react";
 import BrandLogo from "./components/BrandLogo";
+import { clearSession } from "./utils/session";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const DashboardLayout = () => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    clearSession();
     navigate("/");
   };
 

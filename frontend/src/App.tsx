@@ -20,6 +20,7 @@ import InstructorSettings from "./InstructorSettings";
 import StudentManagement from "./StudentManagement";
 import Messages from "./Messages";
 import CodingCourseManager from "./CodingCourseManager";
+import { clearSession, getValidSession } from "./utils/session";
 // --- Modified CourseList Component ---
 const CourseList = () => {
   const [courses, setCourses] = useState([]);
@@ -38,13 +39,13 @@ const CourseList = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) { setLoading(false); return; }
+      const session = getValidSession();
+      if (!session?.token) { setLoading(false); return; }
       try {
-        const res = await axios.get(`${API_BASE_URL}/courses`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get(`${API_BASE_URL}/courses`, { headers: { Authorization: `Bearer ${session.token}` } });
         setCourses(res.data);
       } catch (err: any) {
-        if (err.response?.status === 401) { localStorage.removeItem("token"); window.location.href = "/"; }
+        if (err.response?.status === 401) { clearSession(); window.location.href = "/"; }
       } finally { setLoading(false); }
     };
     fetchCourses();
@@ -150,8 +151,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+        <Route path="/admin-login" element={<PublicOnlyRoute><AdminLogin /></PublicOnlyRoute>} />
 
         <Route path="/dashboard" element={<ProtectedRoute requiredRole="instructor"><DashboardLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} /> 
@@ -170,17 +171,31 @@ function App() {
         
         <Route path="/student-dashboard" element={<ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>} />
         <Route path="/course/:courseId/player" element={<ProtectedRoute requiredRole="student"><CoursePlayer /></ProtectedRoute>} />
+        <Route path="*" element={<FallbackRoute />} />
       </Routes>
     </Router>
   );
 }
 
 const ProtectedRoute = ({ children, requiredRole }: { children: any, requiredRole?: string }) => {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
-  if (!token) return <Navigate to="/login" replace />;
-  if (requiredRole && role !== requiredRole) { return role === "instructor" ? <Navigate to="/dashboard" /> : <Navigate to="/student-dashboard" />; }
+  const session = getValidSession();
+  if (!session?.token) return <Navigate to="/login" replace />;
+  if (requiredRole && session.role !== requiredRole) {
+    return session.role === "instructor" ? <Navigate to="/dashboard" /> : <Navigate to="/student-dashboard" />;
+  }
   return children;
+};
+
+const PublicOnlyRoute = ({ children }: { children: any }) => {
+  const session = getValidSession();
+  if (!session?.token) return children;
+  return session.role === "instructor" ? <Navigate to="/dashboard" replace /> : <Navigate to="/student-dashboard" replace />;
+};
+
+const FallbackRoute = () => {
+  const session = getValidSession();
+  if (!session?.token) return <Navigate to="/" replace />;
+  return session.role === "instructor" ? <Navigate to="/dashboard" replace /> : <Navigate to="/student-dashboard" replace />;
 };
 
 export default App;

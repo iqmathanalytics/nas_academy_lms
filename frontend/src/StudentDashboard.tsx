@@ -19,6 +19,7 @@ import * as blazeface from "@tensorflow-models/blazeface";
 import "@tensorflow/tfjs-backend-webgl";
 import BrandLogo from "./components/BrandLogo";
 import { CODE_TEMPLATES } from './utils/codeTemplates';
+import { clearSession, getValidSession } from "./utils/session";
 
 // --- TYPES ---
 interface Course {
@@ -290,7 +291,7 @@ const StudentDashboard = () => {
             setAvailableCourses(allData.filter((c: any) => !myCourseIds.has(c.id)));
             setEnrolledCourses(myData);
         } catch (err: any) {
-            if (err.response?.status === 401) { localStorage.clear(); navigate("/"); }
+            if (err.response?.status === 401) { clearSession(); navigate("/login"); }
         } finally {
             setLoading(false);
         }
@@ -322,8 +323,9 @@ const StudentDashboard = () => {
     };
 
     useEffect(() => {
-        const role = localStorage.getItem("role");
-        if (role === "instructor") { navigate("/dashboard"); return; }
+        const session = getValidSession();
+        if (!session) { navigate("/login"); return; }
+        if (session.role === "instructor") { navigate("/dashboard"); return; }
         fetchData();
         fetchCodeTests();
         fetchProfile();
@@ -743,7 +745,7 @@ const StudentDashboard = () => {
     };
 
     const openEnrollModal = (course: Course) => { setSelectedCourse(course); setShowModal(true); };
-    const handleLogout = () => { localStorage.clear(); navigate("/"); };
+    const handleLogout = () => { clearSession(); navigate("/"); };
 
     // --- ⚔️ THE REAL CODE ARENA VIEW ---
     if (activeTest) {

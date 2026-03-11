@@ -7,6 +7,7 @@ import {
   CheckCircle, Mic, Video, PhoneOff,
   Star, MapPin, Mail, ArrowUp
 } from "lucide-react";
+import { getValidSession } from "./utils/session";
 
 // --- 🎨 BRAND CONSTANTS ---
 const BRAND_BLUE = "#005EB8";
@@ -136,6 +137,18 @@ const LandingPage = () => {
     const reviewTimer = setInterval(() => setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length), 5000);
     return () => { clearInterval(heroTimer); clearInterval(textTimer); clearInterval(reviewTimer); };
   }, []);
+
+  useEffect(() => {
+    const session = getValidSession();
+    if (!session) return;
+    if (session.role === "instructor") {
+      navigate("/dashboard");
+      return;
+    }
+    if (session.role === "student") {
+      navigate("/student-dashboard");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);

@@ -8,6 +8,7 @@ import {
   Smartphone, MessageSquare, AlertCircle, X
 } from "lucide-react";
 import BrandLogo from "./components/BrandLogo";
+import { saveSession } from "./utils/session";
 
 // 🔥 FIREBASE IMPORTS
 import { initializeApp } from "firebase/app";
@@ -272,8 +273,7 @@ const Login = () => {
           setLoading(false);
           return;
         }
-        localStorage.setItem("token", res.data.access_token);
-        localStorage.setItem("role", res.data.role);
+        saveSession(res.data.access_token, res.data.role);
         triggerToast("Login Successful! Redirecting...", "success");
         setTimeout(() => navigate("/student-dashboard"), 1000);
       } catch (err: any) {
