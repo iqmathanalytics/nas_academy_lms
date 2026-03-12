@@ -146,7 +146,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 # --- 📋 DATA MODELS ---
 # (Keeping your existing Pydantic models)
 class UserCreate(BaseModel):
-    email: str; password: str; name: str; role: str; phone_number: Optional[str] = None
+    email: str; password: str; name: str; role: Optional[str] = None; phone_number: Optional[str] = None
 
 class ModuleCreate(BaseModel):
     title: str; order: int
@@ -481,12 +481,13 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Public signup can only create student accounts")
     
     # 2. Create User
+    normalized_phone = (user.phone_number or "").strip() or None
     new_user = models.User(
         email=user.email, 
         hashed_password=get_password_hash(user.password), 
         full_name=user.name, 
         role="student",
-        phone_number=user.phone_number
+        phone_number=normalized_phone
     )
     db.add(new_user)
     await db.commit()

@@ -39,7 +39,11 @@ const AdminLogin = () => {
       loginParams.append("username", formData.email);
       loginParams.append("password", formData.password);
 
-      const res = await axios.post(`${API_BASE_URL}/login`, loginParams);
+      const res = await axios.post(`${API_BASE_URL}/login`, loginParams.toString(), {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
       if (res.data.role !== "instructor") {
         triggerToast("Access Denied. This portal is for Instructors only.", "error");

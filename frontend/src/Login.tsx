@@ -25,7 +25,6 @@ interface ToastState { show: boolean; message: string; type: "success" | "error"
 const Login = () => {
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
-  const role = "student";
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>({ show: false, message: "", type: "success" });
   const [formData, setFormData] = useState({ email: "", password: "", name: "" });
@@ -40,13 +39,16 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value }); 
   };
   const getApiErrorMessage = (err: any, fallback: string) => {
-    const detail = err?.response?.data?.detail;
+    const data = err?.response?.data;
+    const detail = data?.detail;
     if (typeof detail === "string" && detail.trim()) return detail;
     if (Array.isArray(detail) && detail.length > 0) {
       const first = detail[0];
       if (typeof first === "string" && first.trim()) return first;
       if (first && typeof first.msg === "string" && first.msg.trim()) return first.msg;
     }
+    if (typeof data?.message === "string" && data.message.trim()) return data.message;
+    if (typeof data?.error === "string" && data.error.trim()) return data.error;
     return fallback;
   };
   const triggerToast = (message: string, type: "success" | "error" = "success") => { 
@@ -62,7 +64,8 @@ const Login = () => {
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        role: role
+        role: "student",
+        phone_number: ""
       });
       triggerToast("Account created successfully! Please Sign In.", "success");
 
@@ -87,7 +90,11 @@ const Login = () => {
         loginParams.append("username", formData.email);
         loginParams.append("password", formData.password);
 
-        const res = await axios.post(`${API_URL}/login`, loginParams);
+        const res = await axios.post(`${API_URL}/login`, loginParams.toString(), {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        });
 
         if (res.data.role !== "student") {
           triggerToast("Please use the Admin Portal for Instructor access.", "error");

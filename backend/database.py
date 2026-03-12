@@ -14,6 +14,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("❌ DATABASE_URL is missing in .env file!")
 
+# Safety guard: local SQLite is disabled for this project.
+if DATABASE_URL.startswith("sqlite"):
+    raise ValueError("❌ SQLite DATABASE_URL is not allowed. Configure TiDB/MySQL or PostgreSQL.")
+
 # Normalize DB URL to an async driver so one env var works for both
 # PostgreSQL and TiDB/MySQL deployments.
 if DATABASE_URL.startswith("postgresql+asyncpg://"):
