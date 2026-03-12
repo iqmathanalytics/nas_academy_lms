@@ -1,44 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from './config';
 import {
   User, Lock, Mail, ArrowRight, CheckCircle,
   ShieldCheck,
-  Smartphone, MessageSquare, AlertCircle, X
+  AlertCircle, X
 } from "lucide-react";
 import BrandLogo from "./components/BrandLogo";
 import { saveSession } from "./utils/session";
-import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import type { ConfirmationResult } from "firebase/auth";
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-};
-
-const FIREBASE_CONFIGURED = Boolean(
-  firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId &&
-  firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId
-);
-
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier | null;
-  }
-}
 
 // Google Icon Component
 const GoogleIcon = () => (
@@ -58,11 +28,7 @@ const Login = () => {
   const role = "student";
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>({ show: false, message: "", type: "success" });
-  const [showSignupOtpInput, setShowSignupOtpInput] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-
-  const [formData, setFormData] = useState({ email: "", password: "", name: "", phone_number: "" });
+  const [formData, setFormData] = useState({ email: "", password: "", name: "" });
 
   const activeBg = isSignUp ? "bg-[#87C232]" : "bg-[#005EB8]";
   const activeText = isSignUp ? "text-[#87C232]" : "text-[#005EB8]";
@@ -78,142 +44,25 @@ const Login = () => {
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000); 
   };
 
-  useEffect(() => {
-    auth.useDeviceLanguage();
-  }, []);
-
-  useEffect(() => {
-    if (!isSignUp) {
-      setShowSignupOtpInput(false);
-      setOtp("");
-      setConfirmationResult(null);
-      if (window.recaptchaVerifier) {
-        try { window.recaptchaVerifier.clear(); } catch { }
-        window.recaptchaVerifier = null;
-      }
-      const container = document.getElementById("recaptcha-container-signup");
-      if (container) container.innerHTML = "";
-    }
-  }, [isSignUp]);
-
-  useEffect(() => {
-    if (isSignUp && !showSignupOtpInput) {
-      // Render captcha as soon as signup form is visible.
-      setTimeout(() => { void ensureRecaptcha(); }, 0);
-    }
-  }, [isSignUp, showSignupOtpInput]);
-
-  const ensureRecaptcha = async () => {
-    const containerId = "recaptcha-container-signup";
-    const container = document.getElementById(containerId);
-    if (!container) return null;
-
-    const hasRenderedCaptcha = !!container.querySelector("iframe");
-    if (window.recaptchaVerifier && hasRenderedCaptcha) {
-      return window.recaptchaVerifier;
-    }
-
-    if (window.recaptchaVerifier) {
-      try { window.recaptchaVerifier.clear(); } catch { }
-      window.recaptchaVerifier = null;
-    }
-
-    container.innerHTML = "";
-    try {
-      const verifier = new RecaptchaVerifier(auth, containerId, {
-        size: "normal",
-        "expired-callback": () => triggerToast("Captcha expired. Please solve again.", "error"),
-      });
-      await verifier.render();
-      window.recaptchaVerifier = verifier;
-      return verifier;
-    } catch (err: any) {
-      triggerToast(err?.message || "Captcha init failed.", "error");
-      return null;
-    }
-  };
-
-  const sendSignupOtp = async () => {
-    if (!FIREBASE_CONFIGURED) {
-      triggerToast("Firebase is not configured in .env", "error");
-      return;
-    }
-    if (!formData.phone_number || formData.phone_number.trim().length < 10) {
-      triggerToast("Please enter a valid phone number", "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const verifier = await ensureRecaptcha();
-      if (!verifier) {
-        setLoading(false);
-        return;
-      }
-
-      const phoneNumber = formData.phone_number.startsWith("+")
-        ? formData.phone_number
-        : `+91${formData.phone_number}`;
-
-      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);
-      setConfirmationResult(confirmation);
-      setShowSignupOtpInput(true);
-      triggerToast("OTP sent successfully.", "success");
-    } catch (error: any) {
-      if (error?.code === "auth/invalid-phone-number") {
-        triggerToast("Invalid phone number format.", "error");
-      } else if (error?.code === "auth/too-many-requests") {
-        triggerToast("Too many attempts. Try again later.", "error");
-      } else {
-        triggerToast(`SMS Failed: ${error?.message || "Unknown error"}`, "error");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifySignupOtp = async () => {
-    if (!otp.trim()) {
-      triggerToast("Please enter OTP", "error");
-      return;
-    }
-    if (!confirmationResult) {
-      triggerToast("OTP session expired. Please request OTP again.", "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await confirmationResult.confirm(otp.trim());
-      triggerToast("Phone verified!", "success");
-      await finalizeSignup();
-    } catch {
-      triggerToast("Invalid OTP. Please try again.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Final account creation after OTP verification
+  // Final account creation
   const finalizeSignup = async () => {
+    setLoading(true);
     try {
       await axios.post(`${API_URL}/users`, {
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        role: role,
-        phone_number: formData.phone_number || ""
+        role: role
       });
       triggerToast("Account created successfully! Please Sign In.", "success");
 
       // Reset Everything & Go to Login View
       setIsSignUp(false);
-      setShowSignupOtpInput(false);
-      setOtp("");
-      setConfirmationResult(null);
-      setFormData({ email: "", password: "", name: "", phone_number: "" });
+      setFormData({ email: "", password: "", name: "" });
     } catch (err: any) {
       triggerToast(err.response?.data?.detail || "Registration Failed. Email may exist.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -244,13 +93,9 @@ const Login = () => {
         setLoading(false);
       }
     }
-    // Signup with phone OTP
+    // Signup direct creation
     else {
-      if (!showSignupOtpInput) {
-        await sendSignupOtp();
-      } else {
-        await verifySignupOtp();
-      }
+      await finalizeSignup();
     }
   };
 
@@ -310,67 +155,33 @@ const Login = () => {
             lg:absolute lg:top-0 lg:left-0 lg:w-1/2 lg:h-full lg:transition-all lg:duration-700 lg:ease-in-out lg:z-10
             ${isSignUp ? 'flex w-full h-full lg:translate-x-full lg:opacity-100 lg:z-30' : 'hidden lg:flex lg:opacity-0 lg:pointer-events-none'}
         `}>
-          {!showSignupOtpInput ? (
-            <form onSubmit={handleAuth} className="bg-[#F8FAFC] flex flex-col items-center justify-center w-full h-full px-8 py-10 lg:px-12 text-center">
-              <h1 className={`text-3xl font-bold mb-2 ${activeText}`}>Create Account</h1>
-              <p className="text-slate-400 text-sm mb-6">Enter details to verify & join</p>
+          <form onSubmit={handleAuth} className="bg-[#F8FAFC] flex flex-col items-center justify-center w-full h-full px-8 py-10 lg:px-12 text-center">
+            <h1 className={`text-3xl font-bold mb-2 ${activeText}`}>Create Account</h1>
+            <p className="text-slate-400 text-sm mb-6">Enter your details to join</p>
 
-              <div className="w-full max-w-[350px] space-y-4">
-                <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
-                  <User className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
-                  <input type="text" name="name" placeholder="Full Name" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
-                </div>
-                <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
-                  <Mail className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
-                  <input type="email" name="email" placeholder="Email Address" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
-                </div>
-                <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
-                  <Lock className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
-                  <input type="password" name="password" placeholder="Create Password" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
-                </div>
-                <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
-                  <Smartphone className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
-                  <input type="tel" name="phone_number" value={formData.phone_number} placeholder="Phone (e.g. 9999999999)" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
-                </div>
+            <div className="w-full max-w-[350px] space-y-4">
+              <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
+                <User className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
+                <input type="text" name="name" placeholder="Full Name" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
               </div>
-
-              <div className="w-full max-w-[350px] mt-4 flex justify-center">
-                <div id="recaptcha-container-signup"></div>
+              <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
+                <Mail className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
+                <input type="email" name="email" placeholder="Email Address" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
               </div>
-
-              <button type="submit" disabled={loading} className={`mt-8 w-full max-w-[350px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90 disabled:opacity-70`}>
-                {loading ? "Sending OTP..." : "Get OTP & Sign Up"} <CheckCircle size={18} />
-              </button>
-
-              <div className="mt-8 lg:hidden">
-                <p className="text-sm text-slate-500">Already a member? <span onClick={() => setIsSignUp(false)} className="font-bold text-[#005EB8] cursor-pointer">Sign In</span></p>
+              <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
+                <Lock className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
+                <input type="password" name="password" placeholder="Create Password" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
               </div>
-            </form>
-          ) : (
-            <div className="bg-[#F8FAFC] flex flex-col items-center justify-center h-full px-8 py-10 lg:px-12 text-center w-full animate-fade-in">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <MessageSquare className="text-[#87C232]" size={32} />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">Verify OTP</h2>
-              <p className="text-slate-500 text-sm mb-6">Enter the 6-digit code sent to {formData.phone_number}</p>
-
-              <div className="w-full max-w-[250px] mb-6">
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="123456"
-                  maxLength={6}
-                  className="w-full text-center text-3xl font-bold tracking-widest py-3 border-b-2 border-slate-300 focus:border-[#87C232] outline-none bg-transparent"
-                />
-              </div>
-
-              <button onClick={verifySignupOtp} disabled={loading} className={`w-full max-w-[250px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90 disabled:opacity-70`}>
-                {loading ? "Verifying..." : "Verify & Create"}
-              </button>
-              <button onClick={() => setShowSignupOtpInput(false)} className="mt-4 text-xs text-slate-400 font-bold hover:underline">Change Number</button>
             </div>
-          )}
+
+            <button type="submit" disabled={loading} className={`mt-8 w-full max-w-[350px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90 disabled:opacity-70`}>
+              {loading ? "Creating Account..." : "Sign Up"} <CheckCircle size={18} />
+            </button>
+
+            <div className="mt-8 lg:hidden">
+              <p className="text-sm text-slate-500">Already a member? <span onClick={() => setIsSignUp(false)} className="font-bold text-[#005EB8] cursor-pointer">Sign In</span></p>
+            </div>
+          </form>
         </div>
 
         {/* ============================ */}

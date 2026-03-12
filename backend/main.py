@@ -146,7 +146,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 # --- 📋 DATA MODELS ---
 # (Keeping your existing Pydantic models)
 class UserCreate(BaseModel):
-    email: str; password: str; name: str; role: str; phone_number: str
+    email: str; password: str; name: str; role: str; phone_number: Optional[str] = None
 
 class ModuleCreate(BaseModel):
     title: str; order: int
@@ -239,10 +239,6 @@ class CodePayload(BaseModel):
     # Example: [{"input": "5", "output": "25"}, {"input": "10", "output": "100"}]
     test_cases: List[Dict[str, Any]]
 
-class OTPLoginRequest(BaseModel):
-    phone_number: str
-    
-    
 class ModuleUpdate(BaseModel):
     title: str
 
@@ -495,10 +491,9 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(new_user)
     await db.commit()
 
-    # 3. 📧 SEND OTP EMAIL
-    otp_code = str(random.randint(100000, 999999))
+    # 3. 📧 SEND WELCOME EMAIL
     custom_subject = "Welcome to NAS Academy! Verify your account"
-    custom_body = f"Hello {user.name},\n\nWelcome to NAS Academy!\n\nYour Account Status: ACTIVE\n\n(If you need an OTP for verification, here it is: {otp_code})\n\nHappy Learning!"
+    custom_body = f"Hello {user.name},\n\nWelcome to NAS Academy!\n\nYour Account Status: ACTIVE\n\nYou can now sign in using your email and password.\n\nHappy Learning!"
 
     try:
         # Run in thread so it doesn't block
@@ -1657,20 +1652,6 @@ async def create_course_challenge(course_id: int, challenge: ChallengeCreate, db
     await db.commit()
     
     return {"message": "Challenge added"}
-
-@app.post("/api/v1/login-otp")
-async def login_otp(req: OTPLoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(models.User).where(models.User.phone_number == req.phone_number))
-    # ... logic continues
-    user = result.scalars().first()
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found with this phone number")
-    
-    # 2. Since Firebase already verified the OTP on frontend, 
-    # we trust the request and issue a JWT
-    token = create_access_token(data={"sub": user.email, "role": user.role})
-    return {"access_token": token, "token_type": "bearer", "role": user.role}
 
 @app.post("/api/v1/proctoring/violation")
 async def record_violation(report: ViolationReport, db: AsyncSession = Depends(get_db), current_user: models.User = Depends(require_student)):

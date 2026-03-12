@@ -58,7 +58,7 @@ AWS_LAMBDA_URL="your_aws_lambda_url"
 ```
 
 ### Frontend (`frontend/.env`)
-Create a new file `frontend/.env` and configure your API and Firebase parameters:
+Create a new file `frontend/.env` and configure your API and Razorpay parameters:
 
 ```ini
 # --- API CONNECTION ---
@@ -67,19 +67,7 @@ VITE_API_URL=http://localhost:8000/api/v1  # or your production backend URL
 # --- RAZORPAY ---
 VITE_RAZORPAY_KEY_ID="your_razorpay_key_id"
 VITE_RAZORPAY_PAYLINK_URL="https://razorpay.me/@nasacademy"
-
-# --- FIREBASE CONFIG ---
-VITE_FIREBASE_API_KEY="your_firebase_api_key"
-VITE_FIREBASE_AUTH_DOMAIN="your_firebase.firebaseapp.com"
-VITE_FIREBASE_PROJECT_ID="your_firebase_project_id"
-VITE_FIREBASE_STORAGE_BUCKET="your_firebase.firebasestorage.app"
-VITE_FIREBASE_MESSAGING_SENDER_ID="your_sender_id"
-VITE_FIREBASE_APP_ID="your_app_id"
-VITE_FIREBASE_MEASUREMENT_ID="your_measurement_id"
 ```
-
-Firebase console for your project:
-https://console.firebase.google.com/
 
 ---
 
