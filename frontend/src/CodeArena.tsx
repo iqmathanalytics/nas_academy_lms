@@ -107,7 +107,7 @@ const CodeArena = () => {
         setAiLoading(true);
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.post(`${API_BASE_URL}/ai/generate`, { title: probTitle }, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.post(`${API_BASE_URL}/ai/generate-challenge`, { title: probTitle }, { headers: { Authorization: `Bearer ${token}` } });
 
             setProbDesc(res.data.description);
             setTestCases(JSON.parse(res.data.test_cases));

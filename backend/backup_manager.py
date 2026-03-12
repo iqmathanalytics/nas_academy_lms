@@ -14,7 +14,7 @@ load_dotenv()
 
 # --- ⚙️ CONFIGURATION ---
 BACKUP_DIR = "backups"
-DRIVE_FOLDER_NAME = "iQmath_Backups_Vault"
+DRIVE_FOLDER_NAME = "NAS_Academy_Backups_Vault"
 DB_FILE_NAME = "sql_app.db"  # Change this if using PostgreSQL (see below)
 RETENTION_DAYS = 30
 
@@ -61,7 +61,7 @@ def get_drive_service():
 def create_local_backup():
     """Creates a timestamped Zip of the remote PostgreSQL database"""
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_filename = f"iQmath_DB_{timestamp}.zip"
+    backup_filename = f"NAS_Academy_DB_{timestamp}.zip"
     backup_path = os.path.join(BACKUP_DIR, backup_filename)
     dump_file = "temp_dump.sql"
 
@@ -82,7 +82,7 @@ def create_local_backup():
 
         # 2. Zip the SQL file
         with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            zipf.write(dump_file, arcname="iQmath_Backup.sql")
+            zipf.write(dump_file, arcname="NAS_Academy_Backup.sql")
         
         # 3. Cleanup temp file
         if os.path.exists(dump_file):

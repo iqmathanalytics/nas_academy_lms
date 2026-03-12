@@ -56,10 +56,9 @@ from sqlalchemy import text
 from token_manager import TokenManager
 
 
-AWS_LAMBDA_URL = os.getenv("AWS_LAMBDA_URL")
-        
 # Load environment variables
 load_dotenv()
+AWS_LAMBDA_URL = os.getenv("AWS_LAMBDA_URL")
 
 # 1. Initialize Database Tables (Async approach is slightly different, but for now we keep sync creation for simplicity or use Alembic in prod)
 # For this setup, we will rely on the sync engine for table creation if needed, or assume tables exist.
@@ -93,7 +92,7 @@ async def init_models():
             print(f"Migration note: {e}")
             
             
-app = FastAPI(title="iQmath Pro - Military Grade API")
+app = FastAPI(title="NAS Academy - API")
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -122,7 +121,13 @@ app.add_middleware(
 )
 
 # --- 🔐 SECURITY & AUTH CONFIG ---
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret_change_me_in_prod")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY or SECRET_KEY in {
+    "fallback_secret_change_me_in_prod",
+    "change_me",
+    "supersecretkey_change_this_in_production",
+}:
+    raise RuntimeError("Invalid SECRET_KEY. Set a strong, non-placeholder value in backend/.env")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 
@@ -322,14 +327,14 @@ def send_credentials_email(to_email: str, name: str, password: str = None, subje
 
     # 3. Construct Content
     if not subject:
-        subject = "Welcome to iQmath! Your Credentials"
+        subject = "Welcome to NAS Academy! Your Credentials"
     
     if not body:
         html_content = f"""
         <html>
         <body>
             <h1>Welcome {name}!</h1>
-            <p>You have been admitted to iQmath Pro.</p>
+            <p>You have been admitted to NAS Academy.</p>
             <p><strong>User ID:</strong> {to_email}</p>
             <p><strong>Password:</strong> {password}</p>
             <br/>
@@ -343,7 +348,7 @@ def send_credentials_email(to_email: str, name: str, password: str = None, subje
 
     # 4. Create Payload
     payload = {
-        "sender": {"name": "iQmath Admin", "email": sender_email},
+        "sender": {"name": "NAS Academy Admin", "email": sender_email},
         "to": [{"email": to_email, "name": name}],
         "subject": subject,
         "htmlContent": html_content
@@ -473,13 +478,18 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.User).where(models.User.email == user.email))
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Security hardening: public signup can only create student accounts.
+    requested_role = (user.role or "").strip().lower()
+    if requested_role and requested_role != "student":
+        raise HTTPException(status_code=403, detail="Public signup can only create student accounts")
     
     # 2. Create User
     new_user = models.User(
         email=user.email, 
         hashed_password=get_password_hash(user.password), 
         full_name=user.name, 
-        role=user.role,
+        role="student",
         phone_number=user.phone_number
     )
     db.add(new_user)
@@ -487,8 +497,8 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
     # 3. 📧 SEND OTP EMAIL
     otp_code = str(random.randint(100000, 999999))
-    custom_subject = "Welcome to iQmath! Verify your account"
-    custom_body = f"Hello {user.name},\n\nWelcome to iQmath Pro!\n\nYour Account Status: ACTIVE\n\n(If you need an OTP for verification, here it is: {otp_code})\n\nHappy Learning!"
+    custom_subject = "Welcome to NAS Academy! Verify your account"
+    custom_body = f"Hello {user.name},\n\nWelcome to NAS Academy!\n\nYour Account Status: ACTIVE\n\n(If you need an OTP for verification, here it is: {otp_code})\n\nHappy Learning!"
 
     try:
         # Run in thread so it doesn't block
@@ -1537,38 +1547,6 @@ async def verify_assignment(submission_id: int, db: AsyncSession = Depends(get_d
     # ✅ Removed certificate logic.
     return {"message": "Verified"}
 
-@app.post("/api/v1/execute")
-async def execute_code(payload: CodePayload):
-    if not AWS_LAMBDA_URL:
-        raise HTTPException(status_code=500, detail="Compiler Configuration Error (Missing AWS URL)")
-
-    try:
-        # 1. Forward the request to AWS Lambda
-        # We allow a longer timeout (10s) because Java/C++ compilation takes time
-        response = requests.post(AWS_LAMBDA_URL, json={
-            "source_code": payload.source_code,
-            "language_id": payload.language_id,
-            "test_cases": payload.test_cases, 
-            "stdin": "" 
-        }, timeout=10)
-        
-        # 2. Parse AWS Response
-        # API Gateway sometimes wraps the response in a "body" string
-        data = response.json()
-        
-        if "body" in data:
-            if isinstance(data["body"], str):
-                return json.loads(data["body"])
-            return data["body"]
-            
-        return data
-
-    except requests.exceptions.Timeout:
-        return {"error": "Execution Timed Out (Server Limit)"}
-    except Exception as e:
-        print(f"AWS Error: {e}")
-        return {"error": "Compiler Service Unavailable"}
-    
 # 1. Toggle Item Completion (The Green Tick)
 @app.post("/api/v1/content/{item_id}/complete")
 async def mark_item_complete(item_id: int, db: AsyncSession = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -1952,7 +1930,7 @@ async def generate_course_description_pdf(course_id: int, db: AsyncSession = Dep
         
         # -- Styling --
         # Header Blue Bar
-        p.setFillColor(colors.Color(0/255, 94/255, 184/255)) # iQmath Blue
+        p.setFillColor(colors.Color(0/255, 94/255, 184/255)) # NAS Academy Blue
         p.rect(0, height - 100, width, 100, fill=True, stroke=False)
         
         # Title (White text on Blue)
@@ -1994,7 +1972,7 @@ async def generate_course_description_pdf(course_id: int, db: AsyncSession = Dep
         # Footer
         p.setFont("Helvetica-Oblique", 10)
         p.setFillColor(colors.grey)
-        p.drawCentredString(width / 2, 30, f"Generated by iQmath Pro • {datetime.utcnow().strftime('%Y-%m-%d')}")
+        p.drawCentredString(width / 2, 30, f"Generated by NAS Academy • {datetime.utcnow().strftime('%Y-%m-%d')}")
         
         p.showPage()
         p.save()
@@ -2012,4 +1990,4 @@ async def generate_course_description_pdf(course_id: int, db: AsyncSession = Dep
     )
     
 @app.get("/")
-def read_root(): return {"status": "online", "message": "iQmath Military Grade API Active 🟢"}
+def read_root(): return {"status": "online", "message": "NAS Academy API Active 🟢"}

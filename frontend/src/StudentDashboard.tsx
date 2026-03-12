@@ -682,7 +682,7 @@ const StudentDashboard = () => {
                     key: razorpayKey,
                     amount: orderRes.data.amount,
                     currency: orderRes.data.currency,
-                    name: "iQmath Pro",
+                    name: "NAS Academy",
                     description: `Unlock ${selectedCourse.title}`,
                     order_id: orderRes.data.id,
                     handler: async function (response: any) {
@@ -699,7 +699,7 @@ const StudentDashboard = () => {
                         triggerToast("🎉 Payment Successful! Course Unlocked.", "success");
                         fetchData(); setShowModal(false); setActiveTab("learning");
                     },
-                    prefill: { name: "Student", email: "student@iqmath.com" },
+                    prefill: { name: "Student", email: "student@nasacademy.com" },
                     theme: { color: "#005EB8" },
                 };
 
@@ -838,7 +838,7 @@ const StudentDashboard = () => {
             <div className="flex h-screen items-center justify-center bg-[#E2E8F0]">
                 <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005EB8]"></div>
-                    <p className="text-slate-600 font-bold animate-pulse">Loading iQmath Dashboard...</p>
+                    <p className="text-slate-600 font-bold animate-pulse">Loading NAS Academy Dashboard...</p>
                 </div>
             </div>
         );
@@ -929,7 +929,7 @@ const StudentDashboard = () => {
                         className="absolute left-0 top-0 h-full w-64 bg-white shadow-2xl p-6 flex flex-col gap-6"
                     >
                         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                            <span className="text-xl font-extrabold text-[#005EB8]">iQmath<span className="text-[#87C232]">Pro</span></span>
+                            <span className="text-xl font-extrabold text-[#005EB8]">NAS<span className="text-[#87C232]">Academy</span></span>
                             <button onClick={() => setIsMobileMenuOpen(false)} className="text-slate-400 hover:text-slate-600">
                                 <X size={24} />
                             </button>

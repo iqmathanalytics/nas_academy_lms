@@ -1,4 +1,4 @@
-# IQMath Learning Management System
+# NAS Academy Learning Management System
 
 A full-stack Learning Management System complete with payment integration, AI features, an interactive code compiler, and secure authentication. 
 
@@ -66,7 +66,7 @@ VITE_API_URL=http://localhost:8000/api/v1  # or your production backend URL
 
 # --- RAZORPAY ---
 VITE_RAZORPAY_KEY_ID="your_razorpay_key_id"
-VITE_RAZORPAY_PAYLINK_URL="https://razorpay.me/iqmathtechnologies"
+VITE_RAZORPAY_PAYLINK_URL="https://razorpay.me/@nasacademy"
 
 # --- FIREBASE CONFIG ---
 VITE_FIREBASE_API_KEY="your_firebase_api_key"
@@ -78,8 +78,8 @@ VITE_FIREBASE_APP_ID="your_app_id"
 VITE_FIREBASE_MEASUREMENT_ID="your_measurement_id"
 ```
 
-Firebase console for this project:
-https://console.firebase.google.com/project/iqmath-lms/overview
+Firebase console for your project:
+https://console.firebase.google.com/
 
 ---
 

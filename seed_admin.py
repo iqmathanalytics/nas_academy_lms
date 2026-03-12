@@ -7,7 +7,7 @@ def create_instructor():
     print("Creating Admin/Instructor user...")
     
     payload = {
-        "email": "admin@iqmath.com",
+        "email": "admin@nasacademy.com",
         "password": "admin123",  # You will use this to login
         "name": "Chief Instructor",
         "role": "instructor",
@@ -19,7 +19,7 @@ def create_instructor():
         
         if response.status_code == 201:
             print("SUCCESS: User created.")
-            print("Email: admin@iqmath.com")
+            print("Email: admin@nasacademy.com")
             print("Password: admin123")
         elif response.status_code == 400:
             print("User already exists. You can login now.")

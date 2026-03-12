@@ -8,12 +8,13 @@ import {
   Star, MapPin, Mail, ArrowUp
 } from "lucide-react";
 import { getValidSession } from "./utils/session";
+import nasLogo from "./assets/nas-logo.jpeg";
 
 // --- 🎨 BRAND CONSTANTS ---
 const BRAND_BLUE = "#005EB8";
 const BRAND_GREEN = "#87C232";
 const GITHUB_REPO_URL = "https://github.com/iqmathanalytics/iqmathlms_platform";
-const RAZORPAY_PAYLINK_URL = "https://razorpay.me/iqmathtechnologies";
+const RAZORPAY_PAYLINK_URL = "https://razorpay.me/@nasacademy";
 
 // --- 🔄 HERO SLIDE DATA ---
 const SLIDES = [
@@ -21,7 +22,7 @@ const SLIDES = [
     id: 0,
     line1: "Learn Every Day & Any",
     line2: "New Skills Online",
-    line3: "With Our iQmath Platform.",
+    line3: "With NAS Academy.",
     sub: "Future-proof your career with world-class education.",
     highlightColor: "text-[#87C232]",
     buttonColor: "bg-[#87C232]",
@@ -42,50 +43,16 @@ const SLIDES = [
 ];
 
 // --- 🎨 PRECISE BRAND LOGO (EXACT REPLICA) ---
-const IQMathLogo = ({ isTwoTone = false, color = "white" }) => (
-  <svg
-    viewBox="0 0 540 160"
-    className="w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[440px]"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <g transform="translate(10, 20)">
-      {/* Precise 'i' */}
-      <circle cx="35" cy="15" r="10" fill={isTwoTone ? BRAND_BLUE : color} />
-      <rect x="25" y="32" width="20" height="68" rx="5" fill={isTwoTone ? BRAND_BLUE : color} />
-
-      {/* Precise 'Q' */}
-      <path
-        d="M105 15 A50 50 0 1 0 105 115"
-        stroke={isTwoTone ? BRAND_BLUE : color}
-        strokeWidth="18"
-        fill="none"
-      />
-      <path
-        d="M105 15 A50 50 0 0 1 140 105 L 155 125"
-        stroke={isTwoTone ? BRAND_GREEN : color}
-        strokeWidth="18"
-        fill="none"
-        strokeLinecap="round"
-      />
-
-      {/* Circuit Nodes */}
-      <g stroke={isTwoTone ? BRAND_GREEN : color} strokeWidth="2.5" fill="none">
-        <path d="M85 65 V50 H95" />
-        <path d="M105 42 V55" />
-        <path d="M122 75 V60 H112" />
-        <circle cx="85" cy="65" r="5" fill={isTwoTone ? BRAND_GREEN : color} stroke="none" />
-        <circle cx="105" cy="42" r="5" fill={isTwoTone ? BRAND_GREEN : color} stroke="none" />
-        <circle cx="122" cy="75" r="5" fill={isTwoTone ? BRAND_GREEN : color} stroke="none" />
-      </g>
-    </g>
-    <text x="180" y="118" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="105" fill={isTwoTone ? BRAND_BLUE : color} letterSpacing="-5">math</text>
-    <text x="185" y="148" fontFamily="Arial, sans-serif" fontWeight="600" fontSize="34" fill={isTwoTone ? BRAND_GREEN : color} letterSpacing="4">Technologies</text>
-  </svg>
+const NASAcademyLogo = ({ isTwoTone = false }: { isTwoTone?: boolean }) => (
+  <div className="w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[440px] flex flex-col items-center">
+    <img src={nasLogo} alt="NAS Academy" className="w-full h-auto object-contain" />
+    <span className={`mt-2 font-semibold tracking-[0.3em] uppercase text-sm ${isTwoTone ? "text-[#005EB8]" : "text-white/90"}`}>NAS Academy</span>
+  </div>
 );
 
 // --- 📝 SECTION DATA ---
 const DYNAMIC_TEXTS = [
-  "Discover a transformative learning experience with iQmath's online courses, meticulously crafted for real-life applicability. Our curriculum seamlessly integrates theory with practical insights.",
+  "Discover a transformative learning experience with NAS Academy's online courses, meticulously crafted for real-life applicability. Our curriculum seamlessly integrates theory with practical insights.",
   "Our expert-led sessions focus on industry-relevant skills, ensuring you stay ahead of the curve. Join thousands of successful students who have upgraded their careers.",
   "Experience interactive learning with live doubt-clearing sessions and hands-on projects. We prioritize your growth with personalized mentorship and community support."
 ];
@@ -174,7 +141,7 @@ const LandingPage = () => {
         {/* LEFT CONTENT */}
         <div className="w-full lg:w-[50%] flex flex-col justify-center px-6 py-12 md:px-12 lg:px-20 bg-white relative z-20 text-center lg:text-left">
           <div className="absolute top-6 left-6 lg:left-20 scale-75 origin-top-left lg:scale-50">
-            <IQMathLogo isTwoTone={true} />
+            <NASAcademyLogo isTwoTone={true} />
           </div>
 
           <AnimatePresence mode="wait">
@@ -215,7 +182,7 @@ const LandingPage = () => {
                   </div>
                 ) : (
                   <>
-                    <IQMathLogo color="white" />
+                    <NASAcademyLogo />
                     <div className="mt-4 text-center">
                       <div className="h-0.5 w-48 bg-white/40 mx-auto rounded-full mb-4" />
                       <h3 className="text-white text-3xl font-light tracking-[0.3em] uppercase opacity-90">Technologies</h3>
@@ -327,12 +294,12 @@ const LandingPage = () => {
       {/* ================= SECTION 6: FOOTER ================= */}
       <footer className="w-full bg-[#020617] text-slate-300 py-12 lg:py-16 px-6 lg:px-24 border-t border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
-          <div><h4 className="text-white text-lg font-bold mb-6 relative pb-2 inline-block">About Company<span className="absolute bottom-0 left-0 w-8 h-1 bg-[#005EB8] rounded-full"></span></h4><h1 className="text-2xl font-black text-white tracking-tighter">iQ<span className="text-[#005EB8]">math</span></h1></div>
+          <div><h4 className="text-white text-lg font-bold mb-6 relative pb-2 inline-block">About Company<span className="absolute bottom-0 left-0 w-8 h-1 bg-[#005EB8] rounded-full"></span></h4><h1 className="text-2xl font-black text-white tracking-tighter">NAS<span className="text-[#005EB8]">Academy</span></h1></div>
           <div><h4 className="text-white text-lg font-bold mb-6 relative pb-2 inline-block">Quick Links<span className="absolute bottom-0 left-0 w-8 h-1 bg-[#005EB8] rounded-full"></span></h4><ul className="space-y-3 text-sm font-medium">{["Marketing", "Data Science", "Business"].map((item) => (<li key={item} className="hover:text-[#005EB8] cursor-pointer transition-colors">{item}</li>))}</ul></div>
           <div><h4 className="text-white text-lg font-bold mb-6 relative pb-2 inline-block">Resources<span className="absolute bottom-0 left-0 w-8 h-1 bg-[#005EB8] rounded-full"></span></h4><ul className="space-y-3 text-sm font-medium"><li><a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer" className="hover:text-[#005EB8] transition-colors">GitHub Repository</a></li><li><a href={RAZORPAY_PAYLINK_URL} target="_blank" rel="noreferrer" className="hover:text-[#005EB8] transition-colors">Razorpay Payment Link</a></li><li className="hover:text-[#005EB8] cursor-pointer transition-colors">Documentation</li></ul></div>
-          <div><h4 className="text-white text-lg font-bold mb-6 relative pb-2 inline-block">Get in touch!<span className="absolute bottom-0 left-0 w-8 h-1 bg-[#005EB8] rounded-full"></span></h4><ul className="space-y-4 text-sm"><li className="flex gap-3"><MapPin size={18} className="text-[#005EB8] flex-shrink-0" /> <span className="flex-1">Chennai, Tamil Nadu</span></li><li className="flex gap-3"><Mail size={18} className="text-[#005EB8] flex-shrink-0" /> iqmathindia@gmail.com</li></ul></div>
+          <div><h4 className="text-white text-lg font-bold mb-6 relative pb-2 inline-block">Get in touch!<span className="absolute bottom-0 left-0 w-8 h-1 bg-[#005EB8] rounded-full"></span></h4><ul className="space-y-4 text-sm"><li className="flex gap-3"><MapPin size={18} className="text-[#005EB8] flex-shrink-0" /> <span className="flex-1">Chennai, Tamil Nadu</span></li><li className="flex gap-3"><Mail size={18} className="text-[#005EB8] flex-shrink-0" /> support@nasacademy.com</li></ul></div>
         </div>
-        <div className="pt-8 border-t border-slate-800 text-center text-xs text-slate-500"><p>Copyright © 2023 iQmath All Rights Reserved.</p></div>
+        <div className="pt-8 border-t border-slate-800 text-center text-xs text-slate-500"><p>Copyright © 2023 NAS Academy. All Rights Reserved.</p></div>
       </footer>
 
       {/* SCROLL TO TOP */}

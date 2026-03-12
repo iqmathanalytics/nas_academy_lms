@@ -1153,7 +1153,7 @@ const CoursePlayer = () => {
                 key: razorpayKey,
                 amount: data.amount,
                 currency: "INR",
-                name: "iQmath Pro",
+                name: "NAS Academy",
                 description: "Lifetime Course Access",
                 order_id: data.id,
                 handler: async function (response: any) {

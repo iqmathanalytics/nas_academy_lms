@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from './config';
@@ -9,10 +9,8 @@ import {
 } from "lucide-react";
 import BrandLogo from "./components/BrandLogo";
 import { saveSession } from "./utils/session";
-
-// 🔥 FIREBASE IMPORTS
 import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { ConfirmationResult, getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,7 +19,7 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const FIREBASE_CONFIGURED = Boolean(
@@ -29,20 +27,15 @@ const FIREBASE_CONFIGURED = Boolean(
   firebaseConfig.authDomain &&
   firebaseConfig.projectId &&
   firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId &&
-  !String(firebaseConfig.apiKey).includes("replace_me")
+  firebaseConfig.appId
 );
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-auth.useDeviceLanguage();
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
 
 declare global {
   interface Window {
     recaptchaVerifier?: RecaptchaVerifier | null;
-    recaptchaWidgetId?: number;
-    recaptchaContainerId?: string;
-    grecaptcha?: { reset: (widgetId?: number) => void };
   }
 }
 
@@ -64,15 +57,11 @@ const Login = () => {
   const role = "student";
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>({ show: false, message: "", type: "success" });
-
-  // OTP flow is only for signup verification
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [showSignupOtpInput, setShowSignupOtpInput] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
-  const [isCaptchaSolved, setIsCaptchaSolved] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
-  const [formData, setFormData] = useState({ email: "", password: "", name: "" });
+  const [formData, setFormData] = useState({ email: "", password: "", name: "", phone_number: "" });
 
   const activeBg = isSignUp ? "bg-[#87C232]" : "bg-[#005EB8]";
   const activeText = isSignUp ? "text-[#87C232]" : "text-[#005EB8]";
@@ -80,158 +69,130 @@ const Login = () => {
   // ✅ API URL FROM ENV
   const API_URL = API_BASE_URL;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
-  const triggerToast = (message: string, type: "success" | "error" = "success") => { setToast({ show: true, message, type }); setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000); };
-  const getRecaptchaContainerId = () => (isSignUp ? "recaptcha-container-signup" : "recaptcha-container-signin");
-
-  const ensureRecaptcha = async () => {
-    const targetId = getRecaptchaContainerId();
-
-    if (window.recaptchaVerifier) {
-      if (window.recaptchaContainerId === targetId) {
-        // Reuse existing widget as-is. Do not reset here, otherwise user
-        // is forced to solve captcha again right after clicking Get OTP.
-        return window.recaptchaVerifier;
-      }
-      try { window.recaptchaVerifier.clear(); } catch { }
-      window.recaptchaVerifier = null;
-      window.recaptchaWidgetId = undefined;
-      window.recaptchaContainerId = undefined;
-    }
-    try {
-      const container = document.getElementById(targetId);
-      if (!container) return null;
-      container.innerHTML = "";
-
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, targetId, {
-        size: "normal",
-        callback: () => {
-          setIsCaptchaSolved(true);
-          console.log("Captcha Verified");
-        },
-        'expired-callback': () => {
-          setIsCaptchaSolved(false);
-          triggerToast("Captcha expired. Please solve it again.", "error");
-        }
-      });
-      window.recaptchaWidgetId = await window.recaptchaVerifier.render();
-      window.recaptchaContainerId = targetId;
-      return window.recaptchaVerifier;
-    } catch (err) {
-      console.error("Recaptcha Init Error:", err);
-      return null;
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => { 
+    setFormData({ ...formData, [e.target.name]: e.target.value }); 
+  };
+  const triggerToast = (message: string, type: "success" | "error" = "success") => { 
+    setToast({ show: true, message, type }); 
+    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000); 
   };
 
   useEffect(() => {
-    setShowSignupOtpInput(false);
-    setOtp("");
-    setConfirmationResult(null);
-    setIsCaptchaSolved(false);
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-      } catch { }
-      window.recaptchaVerifier = null;
-    }
-    window.recaptchaWidgetId = undefined;
-    window.recaptchaContainerId = undefined;
+    auth.useDeviceLanguage();
+  }, []);
 
-    const signInContainer = document.getElementById("recaptcha-container-signin");
-    if (signInContainer) signInContainer.innerHTML = "";
-    const signUpContainer = document.getElementById("recaptcha-container-signup");
-    if (signUpContainer) signUpContainer.innerHTML = "";
-    if (isSignUp) void ensureRecaptcha();
-  }, [isSignUp]);
-
-  // Signup OTP
-  const sendSignupOtp = async () => {
-    if (!FIREBASE_CONFIGURED) {
-      triggerToast("Firebase OTP is not configured. Update frontend .env values.", "error");
-      return;
-    }
-    if (!phone || phone.length < 10) return triggerToast("Please enter a valid phone number", "error");
-
-    setLoading(true);
-
-    // Auto-add +91 if user didn't type country code
-    const phoneNumber = phone.startsWith("+") ? phone : "+91" + phone;
-
-    try {
-      const appVerifier = await ensureRecaptcha();
-      if (!appVerifier) {
-        setLoading(false);
-        triggerToast("Captcha init failed. Refresh and try again.", "error");
-        return;
-      }
-      if (!isCaptchaSolved) {
-        setLoading(false);
-        triggerToast("Please complete CAPTCHA before sending OTP.", "error");
-        return;
-      }
-
-      const confirmation = await Promise.race([
-        signInWithPhoneNumber(auth, phoneNumber, appVerifier),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("OTP request timeout")), 30000))
-      ]) as any;
-
-      // Save result
-      setConfirmationResult(confirmation);
-      (window as any).confirmationResult = confirmation;
-
-      setLoading(false);
-      setShowSignupOtpInput(true);
-      triggerToast("OTP sent successfully.", "success");
-
-    } catch (error: any) {
-      console.error("SMS Error:", error);
-      setLoading(false);
-
-      // Reset Captcha so they can try again
+  useEffect(() => {
+    if (!isSignUp) {
+      setShowSignupOtpInput(false);
+      setOtp("");
+      setConfirmationResult(null);
       if (window.recaptchaVerifier) {
         try { window.recaptchaVerifier.clear(); } catch { }
         window.recaptchaVerifier = null;
       }
-      setIsCaptchaSolved(false);
-      const container = document.getElementById(getRecaptchaContainerId());
+      const container = document.getElementById("recaptcha-container-signup");
       if (container) container.innerHTML = "";
+    }
+  }, [isSignUp]);
 
-      if (error.code === 'auth/invalid-phone-number') {
-        triggerToast("Invalid Phone Number Format.", "error");
-      } else if (error.code === 'auth/argument-error') {
-        triggerToast("Firebase configuration error. Check .env Firebase keys.", "error");
-      } else if (error.code === "auth/invalid-app-credential") {
-        triggerToast("Invalid app credential: complete CAPTCHA, add this domain in Firebase Authorized Domains, disable ad-block/shields, and retry.", "error");
-      } else if (error.code === 'auth/too-many-requests' || error.code === 'auth/quota-exceeded') {
-        triggerToast("Too many attempts. For development, use Firebase test phone numbers (no real SMS is sent).", "error");
-      } else {
-        triggerToast("SMS Failed: " + error.message, "error");
+  useEffect(() => {
+    if (isSignUp && !showSignupOtpInput) {
+      // Render captcha as soon as signup form is visible.
+      setTimeout(() => { void ensureRecaptcha(); }, 0);
+    }
+  }, [isSignUp, showSignupOtpInput]);
+
+  const ensureRecaptcha = async () => {
+    const containerId = "recaptcha-container-signup";
+    const container = document.getElementById(containerId);
+    if (!container) return null;
+
+    const hasRenderedCaptcha = !!container.querySelector("iframe");
+    if (window.recaptchaVerifier && hasRenderedCaptcha) {
+      return window.recaptchaVerifier;
+    }
+
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear(); } catch { }
+      window.recaptchaVerifier = null;
+    }
+
+    container.innerHTML = "";
+    try {
+      const verifier = new RecaptchaVerifier(auth, containerId, {
+        size: "normal",
+        "expired-callback": () => triggerToast("Captcha expired. Please solve again.", "error"),
+      });
+      await verifier.render();
+      window.recaptchaVerifier = verifier;
+      return verifier;
+    } catch (err: any) {
+      triggerToast(err?.message || "Captcha init failed.", "error");
+      return null;
+    }
+  };
+
+  const sendSignupOtp = async () => {
+    if (!FIREBASE_CONFIGURED) {
+      triggerToast("Firebase is not configured in .env", "error");
+      return;
+    }
+    if (!formData.phone_number || formData.phone_number.trim().length < 10) {
+      triggerToast("Please enter a valid phone number", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const verifier = await ensureRecaptcha();
+      if (!verifier) {
+        setLoading(false);
+        return;
       }
+
+      const phoneNumber = formData.phone_number.startsWith("+")
+        ? formData.phone_number
+        : `+91${formData.phone_number}`;
+
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);
+      setConfirmationResult(confirmation);
+      setShowSignupOtpInput(true);
+      triggerToast("OTP sent successfully.", "success");
+    } catch (error: any) {
+      if (error?.code === "auth/invalid-phone-number") {
+        triggerToast("Invalid phone number format.", "error");
+      } else if (error?.code === "auth/too-many-requests") {
+        triggerToast("Too many attempts. Try again later.", "error");
+      } else {
+        triggerToast(`SMS Failed: ${error?.message || "Unknown error"}`, "error");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const verifySignupOtp = async () => {
-    if (!otp) return;
-
-    setLoading(true);
-
-    // Safety check to ensure the SMS was actually sent
+    if (!otp.trim()) {
+      triggerToast("Please enter OTP", "error");
+      return;
+    }
     if (!confirmationResult) {
-      triggerToast("Session expired. Please request a new OTP.", "error");
-      setLoading(false);
+      triggerToast("OTP session expired. Please request OTP again.", "error");
       return;
     }
 
-    confirmationResult.confirm(otp).then(async () => {
-      setLoading(false);
-      triggerToast("Phone Verified!", "success");
+    setLoading(true);
+    try {
+      await confirmationResult.confirm(otp.trim());
+      triggerToast("Phone verified!", "success");
       await finalizeSignup();
-    }).catch((error: any) => {
-      setLoading(false);
-      console.error("Verification Error:", error);
+    } catch {
       triggerToast("Invalid OTP. Please try again.", "error");
-    });
+    } finally {
+      setLoading(false);
+    }
   };
+
   // Final account creation after OTP verification
   const finalizeSignup = async () => {
     try {
@@ -240,7 +201,7 @@ const Login = () => {
         password: formData.password,
         name: formData.name,
         role: role,
-        phone_number: phone
+        phone_number: formData.phone_number || ""
       });
       triggerToast("Account created successfully! Please Sign In.", "success");
 
@@ -248,8 +209,8 @@ const Login = () => {
       setIsSignUp(false);
       setShowSignupOtpInput(false);
       setOtp("");
-      setPhone("");
       setConfirmationResult(null);
+      setFormData({ email: "", password: "", name: "", phone_number: "" });
     } catch (err: any) {
       triggerToast(err.response?.data?.detail || "Registration Failed. Email may exist.", "error");
     }
@@ -282,7 +243,7 @@ const Login = () => {
         setLoading(false);
       }
     }
-    // Signup uses OTP
+    // Signup with phone OTP
     else {
       if (!showSignupOtpInput) {
         await sendSignupOtp();
@@ -309,7 +270,7 @@ const Login = () => {
              ${isSignUp ? 'hidden lg:flex lg:translate-x-full lg:opacity-0 lg:pointer-events-none' : 'flex w-full h-full lg:opacity-100'}
         `}>
           <form onSubmit={handleAuth} className="bg-[#F8FAFC] flex flex-col items-center justify-center w-full h-full px-8 py-10 lg:px-12 text-center">
-            <div className="mb-4"><BrandLogo size="xl" showTagline /></div>
+            <div className="mb-4 flex w-full justify-center"><BrandLogo size="xl" showTagline className="items-center text-center" /></div>
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Learner Login</h1>
             <p className="text-slate-400 text-sm mb-6">Sign in using email and password</p>
 
@@ -348,8 +309,6 @@ const Login = () => {
             lg:absolute lg:top-0 lg:left-0 lg:w-1/2 lg:h-full lg:transition-all lg:duration-700 lg:ease-in-out lg:z-10
             ${isSignUp ? 'flex w-full h-full lg:translate-x-full lg:opacity-100 lg:z-30' : 'hidden lg:flex lg:opacity-0 lg:pointer-events-none'}
         `}>
-
-          {/* STATE A: DETAILS FORM (Before OTP) */}
           {!showSignupOtpInput ? (
             <form onSubmit={handleAuth} className="bg-[#F8FAFC] flex flex-col items-center justify-center w-full h-full px-8 py-10 lg:px-12 text-center">
               <h1 className={`text-3xl font-bold mb-2 ${activeText}`}>Create Account</h1>
@@ -368,38 +327,31 @@ const Login = () => {
                   <Lock className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
                   <input type="password" name="password" placeholder="Create Password" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
                 </div>
-                {/* 📱 PHONE INPUT FOR OTP */}
                 <div className="flex items-center bg-white rounded-lg px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-[#87C232] shadow-sm">
                   <Smartphone className="text-slate-400 mr-3 shrink-0" size={20} strokeWidth={1.5} />
-                  <input type="tel" value={phone} placeholder="Phone (e.g. 9999999999)" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={(e) => setPhone(e.target.value)} />
+                  <input type="tel" name="phone_number" value={formData.phone_number} placeholder="Phone (e.g. 9999999999)" required className="bg-transparent outline-none flex-1 text-sm font-medium text-slate-700 placeholder-slate-400" onChange={handleInputChange} />
                 </div>
               </div>
-              {!showSignupOtpInput && (
-                <div className="w-full max-w-[350px] mt-4 flex justify-center">
-                  <div id="recaptcha-container-signup"></div>
-                </div>
-              )}
 
-              <button type="submit" className={`mt-8 w-full max-w-[350px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90`}>
+              <div className="w-full max-w-[350px] mt-4 flex justify-center">
+                <div id="recaptcha-container-signup"></div>
+              </div>
+
+              <button type="submit" disabled={loading} className={`mt-8 w-full max-w-[350px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90 disabled:opacity-70`}>
                 {loading ? "Sending OTP..." : "Get OTP & Sign Up"} <CheckCircle size={18} />
               </button>
-              {!showSignupOtpInput && !isCaptchaSolved && (
-                <p className="mt-2 text-xs text-slate-500 font-medium">Complete CAPTCHA, then click Get OTP.</p>
-              )}
 
-              {/* MOBILE ONLY SWITCH */}
               <div className="mt-8 lg:hidden">
                 <p className="text-sm text-slate-500">Already a member? <span onClick={() => setIsSignUp(false)} className="font-bold text-[#005EB8] cursor-pointer">Sign In</span></p>
               </div>
             </form>
           ) : (
-            /* STATE B: OTP VERIFICATION FORM */
             <div className="bg-[#F8FAFC] flex flex-col items-center justify-center h-full px-8 py-10 lg:px-12 text-center w-full animate-fade-in">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <MessageSquare className="text-[#87C232]" size={32} />
               </div>
               <h2 className="text-2xl font-bold text-slate-800 mb-2">Verify OTP</h2>
-              <p className="text-slate-500 text-sm mb-6">Enter the 6-digit code sent to {phone}</p>
+              <p className="text-slate-500 text-sm mb-6">Enter the 6-digit code sent to {formData.phone_number}</p>
 
               <div className="w-full max-w-[250px] mb-6">
                 <input
@@ -412,7 +364,7 @@ const Login = () => {
                 />
               </div>
 
-              <button onClick={verifySignupOtp} disabled={loading} className={`w-full max-w-[250px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90`}>
+              <button onClick={verifySignupOtp} disabled={loading} className={`w-full max-w-[250px] py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${activeBg} hover:opacity-90 disabled:opacity-70`}>
                 {loading ? "Verifying..." : "Verify & Create"}
               </button>
               <button onClick={() => setShowSignupOtpInput(false)} className="mt-4 text-xs text-slate-400 font-bold hover:underline">Change Number</button>

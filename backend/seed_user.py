@@ -6,7 +6,7 @@ API_URL = "http://127.0.0.1:8000/api/v1/users"
 def seed_users():
     # 1. Define Instructor Data (Added phone_number)
     instructor = {
-        "email": "instructor@iqmath.com",
+        "email": "instructor@nasacademy.com",
         "password": "password123",
         "name": "Master Instructor",
         "role": "instructor",
@@ -15,7 +15,7 @@ def seed_users():
 
     # 2. Define Student Data (Added phone_number)
     student = {
-        "email": "student@iqmath.com",
+        "email": "student@nasacademy.com",
         "password": "password123",
         "name": "Test Student",
         "role": "student",
@@ -29,7 +29,7 @@ def seed_users():
     try:
         res = requests.post(API_URL, json=instructor)
         if res.status_code == 201:
-            print("✅ Instructor Created: instructor@iqmath.com / securepassword")
+            print("✅ Instructor Created: instructor@nasacademy.com / securepassword")
         elif res.status_code == 400:
             print("⚠️ Instructor already exists.")
         else:
@@ -41,7 +41,7 @@ def seed_users():
     try:
         res = requests.post(API_URL, json=student)
         if res.status_code == 201:
-            print("✅ Student Created: student@iqmath.com / securepassword")
+            print("✅ Student Created: student@nasacademy.com / securepassword")
         elif res.status_code == 400:
             print("⚠️ Student already exists.")
         else:

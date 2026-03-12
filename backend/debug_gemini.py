@@ -1,8 +1,10 @@
 import google.generativeai as genai
 import os
 
-# ✅ YOUR API KEY
-api_key = "AIzaSyBgfLU5nf8l3KbhtsPmcg3f1s7k4irU3UU" # <--- MAKE SURE THIS IS CORRECT
+# Read API key from environment only (never hardcode secrets in source).
+api_key = os.getenv("GEMINI_API_KEY", "").strip()
+if not api_key:
+    raise RuntimeError("GEMINI_API_KEY is missing. Set it in backend/.env before running this script.")
 
 print(f"🔍 Checking API Key: {api_key[:10]}...")
 

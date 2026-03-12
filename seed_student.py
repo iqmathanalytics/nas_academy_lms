@@ -8,7 +8,7 @@ def create_student():
     print("🚀 Creating Student User...")
     
     payload = {
-        "email": "student@iqmath.com",
+        "email": "student@nasacademy.com",
         "password": "pass123",  
         "name": "Test Student",
         "role": "student",
@@ -21,7 +21,7 @@ def create_student():
         
         if response.status_code == 201:
             print("✅ SUCCESS! Student created.")
-            print("📧 Email: student@iqmath.com")
+            print("📧 Email: student@nasacademy.com")
             print("🔑 Password: pass123")
         elif response.status_code == 400:
             print("⚠️ User already exists. You can login with these credentials.")
