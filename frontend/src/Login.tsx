@@ -10,7 +10,8 @@ import {
 import BrandLogo from "./components/BrandLogo";
 import { saveSession } from "./utils/session";
 import { initializeApp } from "firebase/app";
-import { ConfirmationResult, getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import type { ConfirmationResult } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
