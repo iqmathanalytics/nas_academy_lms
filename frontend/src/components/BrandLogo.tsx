@@ -1,5 +1,5 @@
 import React from "react";
-import nasLogo from "../assets/nas-logo.jpeg";
+import nasLogo from "../assets/nas-logo.png";
 
 interface BrandLogoProps {
     size?: "sm" | "md" | "lg" | "xl";

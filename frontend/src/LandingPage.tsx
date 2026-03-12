@@ -8,7 +8,7 @@ import {
   Star, MapPin, Mail, ArrowUp
 } from "lucide-react";
 import { getValidSession } from "./utils/session";
-import nasLogo from "./assets/nas-logo.jpeg";
+import nasLogo from "./assets/nas-logo.png";
 
 // --- 🎨 BRAND CONSTANTS ---
 const BRAND_BLUE = "#005EB8";
@@ -35,9 +35,9 @@ const SLIDES = [
     line2: "Best Online Courses",
     line3: "For Your Future.",
     sub: "Curated content designed for the modern learner.",
-    highlightColor: "text-[#005EB8]",
-    buttonColor: "bg-[#005EB8]",
-    panelGradient: "from-[#003366] via-[#005EB8] to-[#001A33]",
+    highlightColor: "text-[#2F8FE8]",
+    buttonColor: "bg-[#4EA9FF]",
+    panelGradient: "from-[#CFE8FF] via-[#7EC3FF] to-[#4EA9FF]",
     accent: BRAND_BLUE
   },
 ];
@@ -46,7 +46,7 @@ const SLIDES = [
 const NASAcademyLogo = ({ isTwoTone = false }: { isTwoTone?: boolean }) => (
   <div className="w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[440px] flex flex-col items-center">
     <img src={nasLogo} alt="NAS Academy" className="w-full h-auto object-contain" />
-    <span className={`mt-2 font-semibold tracking-[0.3em] uppercase text-sm ${isTwoTone ? "text-[#005EB8]" : "text-white/90"}`}>NAS Academy</span>
+    <span className={`mt-2 font-semibold tracking-[0.3em] uppercase text-sm ${isTwoTone ? "text-[#005EB8]" : "text-white/90"}`}>NA Solution</span>
   </div>
 );
 
@@ -185,7 +185,7 @@ const LandingPage = () => {
                     <NASAcademyLogo />
                     <div className="mt-4 text-center">
                       <div className="h-0.5 w-48 bg-white/40 mx-auto rounded-full mb-4" />
-                      <h3 className="text-white text-3xl font-light tracking-[0.3em] uppercase opacity-90">Technologies</h3>
+                      <h3 className="text-white text-3xl font-light tracking-[0.3em] uppercase opacity-90">Academy</h3>
                     </div>
                   </>
                 )}
