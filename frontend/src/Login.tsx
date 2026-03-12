@@ -39,6 +39,16 @@ const Login = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => { 
     setFormData({ ...formData, [e.target.name]: e.target.value }); 
   };
+  const getApiErrorMessage = (err: any, fallback: string) => {
+    const detail = err?.response?.data?.detail;
+    if (typeof detail === "string" && detail.trim()) return detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0];
+      if (typeof first === "string" && first.trim()) return first;
+      if (first && typeof first.msg === "string" && first.msg.trim()) return first.msg;
+    }
+    return fallback;
+  };
   const triggerToast = (message: string, type: "success" | "error" = "success") => { 
     setToast({ show: true, message, type }); 
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000); 
@@ -60,7 +70,7 @@ const Login = () => {
       setIsSignUp(false);
       setFormData({ email: "", password: "", name: "" });
     } catch (err: any) {
-      triggerToast(err.response?.data?.detail || "Registration Failed. Email may exist.", "error");
+      triggerToast(getApiErrorMessage(err, "Registration failed. Please check your details and try again."), "error");
     } finally {
       setLoading(false);
     }
@@ -88,7 +98,7 @@ const Login = () => {
         triggerToast("Login Successful! Redirecting...", "success");
         setTimeout(() => navigate("/student-dashboard"), 1000);
       } catch (err: any) {
-        triggerToast(err.response?.data?.detail || "Authentication failed. Check credentials.", "error");
+        triggerToast(getApiErrorMessage(err, "Authentication failed. Check credentials."), "error");
       } finally {
         setLoading(false);
       }
