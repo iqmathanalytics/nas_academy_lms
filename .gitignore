@@ -9,6 +9,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # --- PYTHON (Backend) ---
+*.db
 __pycache__/
 *.pyc
 *.pyo
