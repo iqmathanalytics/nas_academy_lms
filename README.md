@@ -4,6 +4,18 @@ A full-stack Learning Management System complete with payment integration, AI fe
 
 Repository: https://github.com/Hariprathap1804/nas_academy_lms (upstream: [iqmathanalytics/nas_academy_lms](https://github.com/iqmathanalytics/nas_academy_lms))
 
+### Personal fork (`Hariprathap1804`) — push from this machine
+
+If `git push personal main` fails with **Permission denied … iqmathanalytics**, Windows is using another GitHub login. Do one of the following:
+
+1. **PAT (recommended):** Create a [GitHub fine-grained or classic token](https://github.com/settings/tokens) for account **Hariprathap1804** with `Contents: Read and write` on `nas_academy_lms`, then run:
+   `.\scripts\push-personal-fork.ps1 -Token ghp_your_token_here`
+2. **Clear cached GitHub creds:** *Windows Credential Manager* → *Windows Credentials* → remove `git:https://github.com` entries, then `git push personal main` and sign in as **Hariprathap1804**.
+
+Remotes: `origin` → iqmathanalytics; `personal` → `https://Hariprathap1804@github.com/Hariprathap1804/nas_academy_lms.git`.
+
+After the fork has `main`, Netlify site **nas-academy-lms** (linked to that repo) will build on push. Set `VITE_API_URL` and other `VITE_*` vars in Netlify **Site configuration → Environment variables**.
+
 ## 🏗️ Project Architecture
 This project is divided into two main parts:
 - **Backend:** FastAPI, PostgreSQL, SQLAlchemy, Asyncpg, Python-Jose (JWT Authentication)
