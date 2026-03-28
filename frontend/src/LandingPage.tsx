@@ -13,7 +13,7 @@ import nasLogo from "./assets/nas-logo.png";
 // --- 🎨 BRAND CONSTANTS ---
 const BRAND_BLUE = "#005EB8";
 const BRAND_GREEN = "#87C232";
-const GITHUB_REPO_URL = "https://github.com/iqmathanalytics/iqmathlms_platform";
+const GITHUB_REPO_URL = "https://github.com/Hariprathap1804/nas_academy_lms";
 const RAZORPAY_PAYLINK_URL = "https://razorpay.me/@nasacademy";
 
 // --- 🔄 HERO SLIDE DATA ---

@@ -2,7 +2,7 @@
 
 A full-stack Learning Management System complete with payment integration, AI features, an interactive code compiler, and secure authentication. 
 
-Official repository: https://github.com/iqmathanalytics/iqmathlms_platform
+Repository: https://github.com/Hariprathap1804/nas_academy_lms (upstream: [iqmathanalytics/nas_academy_lms](https://github.com/iqmathanalytics/nas_academy_lms))
 
 ## 🏗️ Project Architecture
 This project is divided into two main parts:
